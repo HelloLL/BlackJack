@@ -18,11 +18,15 @@
 #define kCardDistance   15
 #define kViewMargin     50
 
-#define kButtonWidth    50
-#define KButtonHeight   20
+#define kButtonWidth    100
+#define KButtonHeight   30
 #define kButtonMargin   20
 
-#define kLabelHeight    20
+#define kLabelWidth     120
+#define kLabelHeight    30
+
+#define kScreenWidth    self.view.bounds.size.width
+#define kScreenHeight   self.view.bounds.size.height
 
 
 @interface LLViewController ()
@@ -37,6 +41,8 @@
 @property (nonatomic, strong) UIButton *standButton;
 @property (nonatomic, strong) UIButton *dealButton;
 
+@property (nonatomic, strong) UILabel *resultLabel;
+
 @property (nonatomic, strong) NSMutableArray *deck;
 
 @property (nonatomic, assign) int chips;
@@ -49,7 +55,7 @@
 - (UIView *)playerHandView
 {
     if (_playerHandView == nil) {
-        _playerHandView = [[UIView alloc] initWithFrame:CGRectMake(0, self.view.bounds.size.height-kViewMargin-kCardHeight, self.view.bounds.size.width, kCardHeight)];
+        _playerHandView = [[UIView alloc] initWithFrame:CGRectMake(0, kScreenHeight-kViewMargin-kCardHeight, kScreenWidth, kCardHeight)];
         [self.view addSubview:_playerHandView];
     }
     return _playerHandView;
@@ -58,7 +64,7 @@
 - (UIView *)dealerHandView
 {
     if (_dealerHandView == nil) {
-        _dealerHandView = [[UIView alloc] initWithFrame:CGRectMake(0, kViewMargin, self.view.bounds.size.width, kCardHeight)];
+        _dealerHandView = [[UIView alloc] initWithFrame:CGRectMake(0, kViewMargin, kScreenWidth, kCardHeight)];
         [self.view addSubview:_dealerHandView];
     }
     return _dealerHandView;
@@ -67,7 +73,7 @@
 - (UILabel *)playerHandValueLabel
 {
     if (_playerHandValueLabel == nil) {
-        _playerHandValueLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, CGRectGetMinY(self.playerHandView.frame)-kLabelHeight, self.view.bounds.size.width, kLabelHeight)];
+        _playerHandValueLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, CGRectGetMinY(self.playerHandView.frame)-kLabelHeight, kScreenWidth, kLabelHeight)];
         _playerHandValueLabel.textAlignment = NSTextAlignmentCenter;
         _playerHandValueLabel.textColor = [UIColor whiteColor];
         [self.view addSubview:_playerHandValueLabel];
@@ -78,7 +84,7 @@
 - (UILabel *)dealerHandValueLabel
 {
     if (_dealerHandValueLabel == nil) {
-        _dealerHandValueLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, CGRectGetMaxY(self.dealerHandView.frame), self.view.bounds.size.width, kLabelHeight)];
+        _dealerHandValueLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, CGRectGetMaxY(self.dealerHandView.frame), kScreenWidth, kLabelHeight)];
         _dealerHandValueLabel.textAlignment = NSTextAlignmentCenter;
         _dealerHandValueLabel.textColor = [UIColor whiteColor];
         [self.view addSubview:_dealerHandValueLabel];
@@ -89,7 +95,9 @@
 - (UIButton *)hitButton
 {
     if (_hitButton == nil) {
-        _hitButton = [[UIButton alloc] initWithFrame:CGRectMake(kButtonMargin, self.view.bounds.size.height-kButtonMargin-KButtonHeight, kButtonWidth, KButtonHeight)];
+        _hitButton = [[UIButton alloc] initWithFrame:CGRectMake(kButtonMargin, kScreenHeight-KButtonHeight, kButtonWidth, KButtonHeight)];
+        [_hitButton setBackgroundColor:[UIColor brownColor]];
+        _hitButton.layer.cornerRadius = 10;
         [_hitButton setTitle:@"Hit" forState:UIControlStateNormal];
         [_hitButton addTarget:self action:@selector(hit) forControlEvents:UIControlEventTouchUpInside];
         [self.view addSubview:_hitButton];
@@ -101,7 +109,9 @@
 - (UIButton *)standButton
 {
     if (_standButton == nil) {
-        _standButton = [[UIButton alloc] initWithFrame:CGRectMake(self.view.bounds.size.width-kButtonMargin-kButtonWidth, self.hitButton.frame.origin.y, kButtonWidth, KButtonHeight)];
+        _standButton = [[UIButton alloc] initWithFrame:CGRectMake(kScreenWidth-kButtonMargin-kButtonWidth, self.hitButton.frame.origin.y, kButtonWidth, KButtonHeight)];
+        [_standButton setBackgroundColor:[UIColor brownColor]];
+        _standButton.layer.cornerRadius = 10;
         [_standButton setTitle:@"Stand" forState:UIControlStateNormal];
         [_standButton addTarget:self action:@selector(stand) forControlEvents:UIControlEventTouchUpInside];
         [self.view addSubview:_standButton];
@@ -115,13 +125,29 @@
     if (_dealButton == nil) {
         _dealButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, kButtonWidth, KButtonHeight)];
         _dealButton.center = self.view.center;
+
         [_dealButton setTitle:@"Deal" forState:UIControlStateNormal];
         [_dealButton addTarget:self action:@selector(newGame) forControlEvents:UIControlEventTouchUpInside];
+        [_dealButton setBackgroundColor:[UIColor colorWithWhite:1.0 alpha:0.8]];
+        [_dealButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+        _dealButton.layer.cornerRadius = 10;
+        _dealButton.layer.shadowOpacity = 1;
         [self.view addSubview:_dealButton];
     }
     return _dealButton;
 }
 
+- (UILabel *)resultLabel
+{
+    if (_resultLabel == nil) {
+        _resultLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreenWidth*0.5-kLabelWidth*0.5, CGRectGetMaxY(self.dealButton.frame)+kButtonMargin, kLabelWidth, kLabelHeight)];
+        [self.view addSubview:_resultLabel];
+        _resultLabel.textColor = [UIColor orangeColor];
+        _resultLabel.textAlignment = NSTextAlignmentCenter;
+        _resultLabel.alpha = 0.0;
+    }
+    return _resultLabel;
+}
 
 - (void)viewDidLoad
 {
@@ -136,29 +162,55 @@
  */
 - (void)newGame
 {
-    // 使用一副新的牌
-    [self useNewDeck];
     
-    // 重设label
+    // 重设分值label
     self.playerHandValueLabel.text = @"";
     self.dealerHandValueLabel.text = @"";
     
-    // 隐藏deal按钮
-    self.dealButton.alpha = 0.0;
     
-    // 清空玩家和庄家的牌区
-    [self removeCardsInView:self.playerHandView];
-    [self removeCardsInView:self.dealerHandView];
+    [UIView animateWithDuration:0.5 animations:^{
+
+        // 隐藏deal按钮和结果label
+        self.dealButton.alpha = 0.0;
+        self.resultLabel.alpha = 0.0;
+        
+        // 动画清空玩家和庄家的牌区
+        [self removeCardsInView:self.playerHandView];
+        [self removeCardsInView:self.dealerHandView];
+        
+    } completion:^(BOOL finished) {
+        
+        // 使用一副新的牌
+        [self useNewDeck];
+        
+        // 给玩家和庄家各两张牌
+        for (int i = 0; i < 2; i++) {
+            [self addCardToView:self.playerHandView];
+            [self addCardToView:self.dealerHandView];
+        }
+        
+        // 计算玩家牌的分值并判断
+        int playerValue = [self calculateValueInView:self.playerHandView];
+        [self judgeValue:playerValue of:kPlayer];
+        
+    }];
     
-    // 给玩家和庄家各两张牌
-    for (int i = 0; i < 2; i++) {
-        [self addCardToView:self.playerHandView];
-        [self addCardToView:self.dealerHandView];
+}
+
+
+/**
+ *  清空view里的牌
+ */
+- (void)removeCardsInView:(UIView *)view
+{
+    for (UIView *card in view.subviews) {
+        [UIView animateWithDuration:0.5 animations:^{
+            card.frame = CGRectMake(view.bounds.size.width, 0, kCardWidth, kCardHeight);
+            card.alpha = 0.0;
+        } completion:^(BOOL finished) {
+            [card removeFromSuperview];
+        }];
     }
-    
-    // 计算玩家牌的分值并判断
-    int playerValue = [self calculateValueInView:self.playerHandView];
-    [self judgeValue:playerValue of:kPlayer];
 }
 
 
@@ -169,7 +221,7 @@
 {
     // 说明: 用数字(字符串)来代表每张牌. 一副牌有52张.
     // 1~13分别代表红桃A~K, 14~26代表方块A~K, 27~39代表黑桃A~K, 40~52代表梅花A~K
-
+    
     self.deck = [NSMutableArray arrayWithCapacity:52];
     for (int i = 0; i < 52; i++) {
         self.deck[i] = [NSString stringWithFormat:@"%d", i+1];
@@ -178,17 +230,18 @@
 
 
 /**
- *  清空view里的牌 (不能使用动画效果, 因为会直接调用下一个方法)
+ *  随机取出一张牌
  */
-- (void)removeCardsInView:(UIView *)view
+- (NSString *)drawCard
 {
-    for (UIView *card in view.subviews) {
-//        [UIView animateWithDuration:0.5 animations:^{
-//            card.frame = CGRectMake(view.bounds.size.width, 0, kCardWidth, kCardHeight);
-//        } completion:^(BOOL finished) {
-            [card removeFromSuperview];
-//        }];
-    }
+    // 获取一个随机数
+    int index = arc4random_uniform((int)self.deck.count);
+    // 获取牌
+    NSString *card = self.deck[index];
+    // 把牌从deck中移除
+    [self.deck removeObjectAtIndex:index];
+    // 返回这张随机牌
+    return card;
 }
 
 
@@ -217,23 +270,9 @@
     // 重新安排这个view中牌的位置, 使用动画
     [UIView animateWithDuration:0.5 animations:^{
         [self arrangeCardsInView:view];
+    } completion:^(BOOL finished) {
+        return;
     }];
-}
-
-
-/**
- *  随机取出一张牌
- */
-- (NSString *)drawCard
-{
-    // 获取一个随机数
-    int index = arc4random_uniform(self.deck.count);
-    // 获取牌
-    NSString *card = self.deck[index];
-    // 把牌从deck中移除
-    [self.deck removeObjectAtIndex:index];
-    // 返回这张随机牌
-    return card;
 }
 
 
@@ -242,7 +281,7 @@
  */
 - (void)arrangeCardsInView:(UIView *)view
 {
-    int subviewsCount = view.subviews.count;
+    int subviewsCount = (int)view.subviews.count;
     
     float leftMargin = (view.bounds.size.width - kCardWidth - (subviewsCount-1)*kCardDistance) * 0.5;
     
@@ -332,17 +371,23 @@
                 int playerValue = [self calculateValueInView:self.playerHandView];
                 if (playerValue > value) {
                     NSLog(@"Win!");
+                    self.resultLabel.text = @"You won!";
                 } else if (playerValue < value) {
                     NSLog(@"Lost!");
+                    self.resultLabel.text = @"You lost!";
                 } else {
                     NSLog(@"Pushed!");
+                    self.resultLabel.text = @"Pushed!";
                 }
                 
                 // 隐藏按钮
                 self.hitButton.hidden = YES;
                 self.standButton.hidden = YES;
-                // 显示deal按钮
-                [UIView animateWithDuration:2.0 animations:^{
+                // 显示结果标签和deal按钮
+                [UIView animateWithDuration:0.5 animations:^{
+                    self.resultLabel.alpha = 1.0;
+                }];
+                [UIView animateWithDuration:1.0 animations:^{
                     self.dealButton.alpha = 1.0;
                 }];
             }
@@ -356,15 +401,20 @@
 {
     // 根据玩家还是庄家赢, 显示不同的结果
     NSLog(@"%d - blackjack!", isPlayer);
+    self.resultLabel.text = @"Blackjack!";
     
     // 隐藏按钮
     self.hitButton.hidden = YES;
     self.standButton.hidden = YES;
     
-    // 显示deal按钮
-    [UIView animateWithDuration:2.0 animations:^{
+    // 显示结果标签和deal按钮
+    [UIView animateWithDuration:0.5 animations:^{
+        self.resultLabel.alpha = 1.0;
+    }];
+    [UIView animateWithDuration:1.0 animations:^{
         self.dealButton.alpha = 1.0;
     }];
+
 }
 
 
@@ -372,13 +422,17 @@
 - (void)bustedWithLoser:(BOOL)isPlayer
 {
     NSLog(@"%d - busted!", isPlayer);
+    self.resultLabel.text = @"Busted!";
     
     // 隐藏按钮
     self.hitButton.hidden = YES;
     self.standButton.hidden = YES;
     
-    // 显示deal按钮
-    [UIView animateWithDuration:2.0 animations:^{
+    // 显示结果标签和deal按钮
+    [UIView animateWithDuration:0.5 animations:^{
+        self.resultLabel.alpha = 1.0;
+    }];
+    [UIView animateWithDuration:1.0 animations:^{
         self.dealButton.alpha = 1.0;
     }];
 }
@@ -422,7 +476,7 @@
     
     // 庄家把第一张牌翻过来
     UIImageView *firstCard = (UIImageView *)self.dealerHandView.subviews[0];
-    firstCard.image = [UIImage imageNamed:[NSString stringWithFormat:@"%d", firstCard.tag]];
+    firstCard.image = [UIImage imageNamed:[NSString stringWithFormat:@"%d", (int)firstCard.tag]];
     
     // 计算并判断庄家的分值
     int dealerValue = [self calculateValueInView:self.dealerHandView];
